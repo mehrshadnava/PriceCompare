@@ -1,0 +1,14 @@
+# sudo cp pricecompare.service /etc/systemd/system/ && sudo systemctl enable --now pricecompare
+[Unit]
+Description=PriceCompare ESDS rates page
+After=network-online.target
+
+[Service]
+WorkingDirectory=/opt/PriceCompare
+ExecStart=/usr/bin/python3 /opt/PriceCompare/app.py
+Environment=PORT=8000
+Restart=always
+User=www-data
+
+[Install]
+WantedBy=multi-user.target

@@ -38,6 +38,8 @@ interface BattleCard {
   usdInr: number;
   competitors: Competitor[];
   rows: BattleRow[];
+  /** providers whose latest scrape failed; their last good data is still shown */
+  warnings?: string[];
 }
 
 const rupees = (n: number) =>
@@ -139,11 +141,29 @@ function BattleCardTable({ card, competitors }: { card: BattleCard; competitors:
 }
 
 function ProviderTable({ s }: { s: Snapshot }) {
+  const [open, setOpen] = useState(false);
   return (
     <section>
       <h3>
-        {s.name} <span className="section">{s.section}</span>
+        <button
+          className={`collapse ${open ? "is-open" : ""}`}
+          aria-expanded={open}
+          onClick={() => setOpen((v) => !v)}
+        >
+          <span className="title">
+            {s.name} <span className="section">{s.section}</span>
+          </span>
+          <span className="count">{s.rows.length} rows</span>
+          <span className="action">
+            {open ? "Hide" : "Show"}
+            <span className="chev" aria-hidden="true">
+              ▾
+            </span>
+          </span>
+        </button>
       </h3>
+      {open && (
+      <>
       <div className="scroll card">
         <table className="raw">
           <thead>
@@ -175,6 +195,8 @@ function ProviderTable({ s }: { s: Snapshot }) {
         Fetched {new Date(s.fetchedAt).toLocaleString()} ·{" "}
         <a href={s.source}>{s.source}</a>
       </small>
+      </>
+      )}
     </section>
   );
 }
@@ -221,6 +243,16 @@ export default function App() {
 
       {card && (
         <>
+          {card.warnings && card.warnings.length > 0 && (
+            <div className="warning" role="alert">
+              <strong>Some rates may be out of date</strong>
+              <ul>
+                {card.warnings.map((w) => (
+                  <li key={w}>{w}</li>
+                ))}
+              </ul>
+            </div>
+          )}
           <div className="picker">
             <span className="picker-label">Compare against</span>
             {card.competitors.map((c) => {

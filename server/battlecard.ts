@@ -48,7 +48,7 @@ interface Offer {
 
 const findCol = (columns: string[], re: RegExp) => columns.findIndex((c) => re.test(c));
 
-const PLAN_COL = /plan|product name|template size/i;
+const PLAN_COL = /plan|product name|template size|flavou?r/i;
 const VCPU_COL = /vcpus?$/i;
 const RAM_COL = /ram/i;
 const PRICE_COL = /^(mrc|monthly)/i;

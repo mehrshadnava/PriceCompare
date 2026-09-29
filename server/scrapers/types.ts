@@ -15,6 +15,8 @@ export interface Provider {
   id: string;
   /** One site can yield several tables (e.g. one per instance series). */
   scrape: () => Promise<Snapshot | Snapshot[]>;
+  /** If set, the dashboard re-scrapes on demand once the data is older than this. */
+  ttlSeconds?: number;
 }
 
 export const clean = (s: string) => s.replace(/\s+/g, " ").trim();

@@ -116,6 +116,22 @@ function esdsOffer(snaps: Snapshot[], vcpu: number, ram: number): Offer | null {
 
 const RAM_TOLERANCE = 0.15;
 
+/**
+ * Shown under each competitor's name. Everything is compared pay-as-you-go (hourly x 730);
+ * these say what each provider's figure is and what is or isn't in the price.
+ */
+const NOTES: Record<string, string> = {
+  ctrls: "Monthly charge (no hourly rate published); disk included",
+  e2e: "USD converted; monthly = hourly x 730; disk included",
+  acecloud: "Hourly x 730 (its monthly plan is ~20% lower); disk extra",
+  cyfuture: "Hourly x 730 (struck-out list price is ~2x); SSD included",
+  tata: "Ubuntu; hourly x 730; disk not itemised",
+  airtel: "Hourly x 730 (monthly plan is ~20% lower); disk extra",
+  aws: "On-demand Linux, Mumbai; USD converted; storage extra",
+  azure: "On-demand Linux, West India; USD converted; storage extra",
+  gcp: "On-demand Linux, Mumbai; USD converted; storage extra",
+};
+
 /** Cheapest offer with the same vCPU count and the same (or near-enough) RAM. */
 function bestMatch(offers: Offer[], vcpu: number, ram: number): { offer: Offer; approx: boolean } | null {
   const sameCpu = offers.filter((o) => o.vcpu === vcpu);
@@ -150,7 +166,7 @@ export function buildBattleCard(latest: Map<string, Snapshot[]>, order: string[]
       });
       continue;
     }
-    competitors.push({ id, name: snaps[0].name, source: snaps[0].source });
+    competitors.push({ id, name: snaps[0].name, source: snaps[0].source, note: NOTES[id] });
     offers.set(id, offersFrom(snaps, true));
   }
 

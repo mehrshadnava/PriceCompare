@@ -277,12 +277,19 @@ export default function App() {
           )}
           <BattleCardTable card={card} competitors={chosen} />
           <p className="foot">
-            Monthly recurring charges, matched on vCPU count with RAM within 15%. Windows
-            SKUs are excluded so licence costs don't skew the comparison. AWS, Azure and
-            Google Cloud are on-demand Linux in their Mumbai regions via{" "}
-            <a href="https://instances.vantage.sh/">Vantage</a>, and along with E2E are
-            converted at ₹{card.usdInr}/USD. Built{" "}
-            {new Date(card.generatedAt).toLocaleString()}.
+            <strong>Basis:</strong> pay-as-you-go monthly cost, i.e. each provider's hourly
+            rate × 730 hours. Yntraa uses its published MRC (within 4% of its hourly × 730), and
+            CtrlS publishes only a monthly charge with no hourly rate. Rows are matched on vCPU
+            count with RAM within 15%, and the cheapest match is shown. Windows SKUs are
+            excluded so licence costs don't skew the comparison.
+          </p>
+          <p className="foot">
+            <strong>What the price includes:</strong> CtrlS, E2E and Cyfuture include a disk in
+            the plan. AceCloud, Airtel, AWS, Azure and Google Cloud price the VM only, and
+            Yntraa bills its root disk separately (₹7/GB), so disk-heavy workloads will differ.
+            Prices exclude GST. AWS, Azure and Google Cloud are on-demand Linux via{" "}
+            <a href="https://instances.vantage.sh/">Vantage</a>; those and E2E are quoted in USD
+            and converted at ₹{card.usdInr}/USD. Built {new Date(card.generatedAt).toLocaleString()}.
           </p>
         </>
       )}

@@ -7,6 +7,7 @@ import { clean, loadPage, type Provider, type Snapshot } from "./types.js";
 const PRICING_URL = "https://cyfuture.cloud/pricing";
 const CALC_URL = "https://cyfuture.cloud/calculator";
 
+const HOURS_PER_MONTH = 730;
 const num = (s: string) => Number(s.replace(/[^0-9.]/g, ""));
 const inr = (n: number) => `₹ ${n.toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
 
@@ -29,9 +30,13 @@ async function scrapePlans(): Promise<Snapshot> {
     const vcpu = spec(/vcpu/i);
     const ram = spec(/\bram\b/i);
     if (!vcpu || !ram || !list) return;
-    // "Monthly (list)" comes first on purpose: the battle card matches on the first
-    // Monthly column, and the struck-out list price is the stable one (the offer can lapse).
-    rows.push([`${vcpu}vCPU / ${ram}GB`, vcpu, ram, spec(/ssd/i), hourly, list, offer]);
+    // The battle card compares everyone pay-as-you-go: hourly x 730. That lands on the offer
+    // price (checked: 0.99x), while the struck-out "list" price is ~2x what the hourly rate
+    // implies, so list is shown for reference only. This column must come first: the card
+    // takes the first Monthly-style column.
+    const payg = num(hourly) * HOURS_PER_MONTH;
+    const paygText = `₹ ${payg.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    rows.push([`${vcpu}vCPU / ${ram}GB`, vcpu, ram, spec(/ssd/i), hourly, paygText, list, offer]);
   });
 
   if (rows.length === 0) throw new Error("Cyfuture: no plans found on /pricing (layout changed?)");
@@ -41,7 +46,7 @@ async function scrapePlans(): Promise<Snapshot> {
     section: "Cloud plans (/pricing) - offer price is marked /mo*",
     source: PRICING_URL,
     fetchedAt: new Date().toISOString(),
-    columns: ["Plan", "vCPUs", "RAM", "SSD (GB)", "Hourly", "Monthly (list)", "Offer /mo*"],
+    columns: ["Plan", "vCPUs", "RAM", "SSD (GB)", "Hourly", `Monthly (hourly x ${HOURS_PER_MONTH})`, "List /mo (struck out)", "Offer /mo*"],
     rows,
   };
 }

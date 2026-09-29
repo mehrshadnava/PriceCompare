@@ -77,12 +77,27 @@ export function vantageProvider(spec: Spec): Provider {
         throw new Error(`${spec.id}: Vantage returned no instances for ${spec.region}`);
       }
 
+      // Vantage returns columns in its own order (e.g. name, memory, vCPUs, price), not the
+      // order we asked for, so locate each one by its header rather than by position.
+      const heads = (body.headers ?? []).map((h) => text(h));
+      const at = (re: RegExp, fallback: number) => {
+        const i = heads.findIndex((h) => re.test(h));
+        return i >= 0 ? i : fallback;
+      };
+      const iName = at(/name|type/i, 0);
+      const iVcpu = at(/vcpu/i, 1);
+      const iRam = at(/memory|ram/i, 2);
+      const iPrice = at(/demand|price|cost/i, 3);
+      if (new Set([iName, iVcpu, iRam, iPrice]).size !== 4) {
+        throw new Error(`${spec.id}: unexpected Vantage headers: ${heads.join(", ")}`);
+      }
+
       const parsed = instances
         .map((cells) => ({
-          plan: text(cells[0]),
-          vcpu: num(cells[1]),
-          ram: num(cells[2]),
-          usd: num(cells[3]),
+          plan: text(cells[iName]),
+          vcpu: num(cells[iVcpu]),
+          ram: num(cells[iRam]),
+          usd: num(cells[iPrice]),
         }))
         .filter((r) => r.plan && r.vcpu && r.ram && r.usd);
       if (parsed.length === 0) {

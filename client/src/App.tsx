@@ -1,19 +1,57 @@
 import { useEffect, useState } from "react";
 
-interface Rate {
-  item: string;
-  unit: string;
-  price: number | null;
-  display: string;
-}
 interface Snapshot {
+  id: string;
+  name: string;
+  section: string;
   source: string;
   fetchedAt: string;
-  rates: Rate[];
+  columns: string[];
+  rows: string[][];
+}
+
+function ProviderTable({ s }: { s: Snapshot }) {
+  return (
+    <section>
+      <h2>{s.name}</h2>
+      <p className="section">{s.section}</p>
+      <div className="scroll">
+        <table>
+          <thead>
+            <tr>
+              {s.columns.map((c) => (
+                <th key={c}>{c}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {s.rows.map((row, i) => (
+              <tr key={i}>
+                {row.map((cell, j) => (
+                  // a short row (e.g. a note) stretches its last cell across the table
+                  <td
+                    key={j}
+                    colSpan={j === row.length - 1 ? s.columns.length - j : 1}
+                    className={/^₹/.test(cell) ? "price" : undefined}
+                  >
+                    {cell}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <small>
+        Last fetched: {new Date(s.fetchedAt).toLocaleString()} | Source:{" "}
+        <a href={s.source}>{s.source}</a>
+      </small>
+    </section>
+  );
 }
 
 export default function App() {
-  const [data, setData] = useState<Snapshot | null>(null);
+  const [data, setData] = useState<Snapshot[] | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -26,35 +64,13 @@ export default function App() {
 
   return (
     <main>
-      <h1>ESDS Cloud Rates</h1>
+      <h1>Cloud Rate Comparison</h1>
       {loading && <p>Loading...</p>}
-      {!loading && !data && <p>No data yet - first fetch in progress. Refresh in a few seconds.</p>}
-      {data && (
-        <>
-          <table>
-            <thead>
-              <tr>
-                <th>Item</th>
-                <th>Unit</th>
-                <th>Monthly Cost</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.rates.map((r) => (
-                <tr key={r.item}>
-                  <td>{r.item}</td>
-                  <td>{r.unit}</td>
-                  <td className="price">{r.display}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <small>
-            Last fetched: {new Date(data.fetchedAt).toLocaleString()} | Source:{" "}
-            <a href={data.source}>{data.source}</a> | Refreshes daily
-          </small>
-        </>
+      {!loading && (!data || data.length === 0) && (
+        <p>No data yet - first fetch in progress. Refresh in a few seconds.</p>
       )}
+      {data?.map((s) => <ProviderTable key={s.id} s={s} />)}
+      <small>Rates refresh daily.</small>
     </main>
   );
 }

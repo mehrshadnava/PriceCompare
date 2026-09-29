@@ -1,7 +1,11 @@
 body { font-family: system-ui, sans-serif; color: #222; margin: 0; }
-main { max-width: 640px; margin: 3rem auto; padding: 0 1rem; }
+main { max-width: 820px; margin: 3rem auto; padding: 0 1rem; }
+section { margin-bottom: 2.5rem; }
+h2 { margin-bottom: 0.2rem; }
+.section { margin: 0 0 0.8rem; color: #666; }
+.scroll { overflow-x: auto; }
 table { border-collapse: collapse; width: 100%; }
-th, td { padding: 0.7rem 1rem; border-bottom: 1px solid #ddd; text-align: left; }
+th, td { padding: 0.6rem 1rem; border-bottom: 1px solid #ddd; text-align: left; white-space: nowrap; }
 th { background: #f4f4f4; }
 .price { font-weight: 600; }
-small { color: #666; display: block; margin-top: 1rem; }
+small { color: #666; display: block; margin-top: 0.8rem; }

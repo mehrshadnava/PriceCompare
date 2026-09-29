@@ -5,7 +5,8 @@ After=network-online.target
 
 [Service]
 WorkingDirectory=/opt/PriceCompare
-ExecStart=/usr/bin/python3 /opt/PriceCompare/app.py
+ExecStart=/usr/bin/node dist/server/index.js
+Environment=NODE_ENV=production
 Environment=PORT=8000
 Restart=always
 User=www-data

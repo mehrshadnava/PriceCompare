@@ -1,17 +1,21 @@
 # PriceCompare
 
 Fetches ESDS **Compute Virtual CPU** and **Compute Virtual RAM** rates from
-https://www.esds.co.in/cloud-service-rates once a day and shows them on a simple page.
-Python 3 standard library only — no `pip install` needed.
+https://www.esds.co.in/cloud-service-rates daily and shows them on a React page.
 
-## Run
-    python3 app.py            # http://<vm-ip>:8000  (API: /api/rates)
-    PORT=80 python3 app.py    # custom port (80 needs root)
+- `server/` - Node + Express + TypeScript: scrapes with cheerio, refreshes on startup and daily at 06:00, caches to `data/rates.json`, serves `/api/rates` and the built React app.
+- `client/` - React + Vite + TypeScript page.
 
-## Run as a service on a VM (systemd)
+## Develop
+    npm install
+    npm run dev:server   # API on :8000
+    npm run dev:client   # Vite on :5173 (proxies /api)
+
+## Deploy on a VM (Node 20+)
     sudo git clone https://github.com/mehrshadnava/PriceCompare /opt/PriceCompare
-    sudo chown -R www-data /opt/PriceCompare
-    sudo cp /opt/PriceCompare/pricecompare.service /etc/systemd/system/
+    cd /opt/PriceCompare && sudo npm ci && sudo npm run build
+    sudo mkdir -p data && sudo chown -R www-data /opt/PriceCompare
+    sudo cp pricecompare.service /etc/systemd/system/
     sudo systemctl enable --now pricecompare
 
-Open port 8000 in the VM firewall / security group. The latest data is cached in `rates.json`.
+Open port 8000 in the VM firewall (or put nginx in front).

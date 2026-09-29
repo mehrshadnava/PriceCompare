@@ -8,12 +8,14 @@ import { ctrls } from "./scrapers/ctrls.js";
 import { e2e } from "./scrapers/e2e.js";
 import { acecloud } from "./scrapers/acecloud.js";
 import { cyfuture } from "./scrapers/cyfuture.js";
+import { tata } from "./scrapers/tata.js";
+import { airtel } from "./scrapers/airtel.js";
 import { yntraa } from "./scrapers/yntraa.js";
 import { aws, azure, gcp } from "./scrapers/vantage.js";
 import type { Provider, Snapshot } from "./scrapers/types.js";
 import { buildBattleCard } from "./battlecard.js";
 
-const PROVIDERS: Provider[] = [yntraa, ctrls, e2e, acecloud, cyfuture, esds, aws, azure, gcp]; // page order
+const PROVIDERS: Provider[] = [yntraa, ctrls, e2e, acecloud, cyfuture, tata, airtel, esds, aws, azure, gcp]; // page order
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // compiled: dist/server/index.js -> repo root is two levels up; dev: server/index.ts -> one level up

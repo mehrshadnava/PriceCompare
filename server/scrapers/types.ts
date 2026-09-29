@@ -13,7 +13,8 @@ export interface Snapshot {
 
 export interface Provider {
   id: string;
-  scrape: () => Promise<Snapshot>;
+  /** One site can yield several tables (e.g. one per instance series). */
+  scrape: () => Promise<Snapshot | Snapshot[]>;
 }
 
 export const clean = (s: string) => s.replace(/\s+/g, " ").trim();
@@ -25,4 +26,25 @@ export async function loadPage(url: string): Promise<cheerio.CheerioAPI> {
   });
   if (!res.ok) throw new Error(`${url} responded with HTTP ${res.status}`);
   return cheerio.load(await res.text());
+}
+
+/** Read a <table> element into a header row plus body rows. */
+export function readTable(
+  $: cheerio.CheerioAPI,
+  table: cheerio.Cheerio<any>,
+  label: string,
+): { columns: string[]; rows: string[][] } {
+  const grid: string[][] = table
+    .find("tr")
+    .map((_, tr) => [
+      $(tr)
+        .find("th, td")
+        .map((_, c) => clean($(c).text()))
+        .get(),
+    ])
+    .get();
+
+  const [columns, ...rows] = grid.filter((r) => r.length > 0);
+  if (!columns || rows.length === 0) throw new Error(`${label}: table is empty`);
+  return { columns, rows };
 }

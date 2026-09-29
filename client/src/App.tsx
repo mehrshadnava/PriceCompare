@@ -76,13 +76,13 @@ function CompetitorCells({ match }: { match: Match | null }) {
       </td>
       <td className="price">{rupees(match.price)}</td>
       <td className={`delta ${match.savingPct > 0 ? "cheaper" : "dearer"}`}>
-        {Math.abs(match.savingPct)}%<span className="arrow">{match.savingPct > 0 ? "↓" : "↑"}</span>
+        {Math.abs(match.savingPct)}%
       </td>
     </>
   );
 }
 
-function BattleCardTable({ card }: { card: BattleCard }) {
+function BattleCardTable({ card, competitors }: { card: BattleCard; competitors: Competitor[] }) {
   let family = "";
   return (
     <div className="scroll card">
@@ -92,7 +92,7 @@ function BattleCardTable({ card }: { card: BattleCard }) {
             <th colSpan={2} className="brand anchor">
               Yntraa Cloud
             </th>
-            {card.competitors.map((c) => (
+            {competitors.map((c) => (
               <th key={c.id} colSpan={3} className="brand">
                 {c.name}
                 {c.note && <span className="brand-note">{c.note}</span>}
@@ -102,7 +102,7 @@ function BattleCardTable({ card }: { card: BattleCard }) {
           <tr className="labels">
             <th className="anchor">Plans</th>
             <th className="anchor">Price</th>
-            {card.competitors.map((c) => [
+            {competitors.map((c) => [
               <th key={`${c.id}-p`}>Plans</th>,
               <th key={`${c.id}-r`}>Price</th>,
               <th key={`${c.id}-d`}>(%)</th>,
@@ -117,12 +117,15 @@ function BattleCardTable({ card }: { card: BattleCard }) {
               <Fragment key={i}>
                 {newFamily && (
                   <tr className="family">
-                    <td colSpan={2 + card.competitors.length * 3}>{row.family}</td>
+                    <td className="family-name" colSpan={2}>
+                      {row.family}
+                    </td>
+                    {competitors.length > 0 && <td colSpan={competitors.length * 3} />}
                   </tr>
                 )}
                 <tr>
                   <YntraaCell row={row} />
-                  {card.competitors.map((c) => (
+                  {competitors.map((c) => (
                     <CompetitorCells key={c.id} match={row.competitors[c.id]} />
                   ))}
                 </tr>
@@ -181,21 +184,29 @@ export default function App() {
   const [rates, setRates] = useState<Snapshot[]>([]);
   const [loading, setLoading] = useState(true);
   const [showRaw, setShowRaw] = useState(false);
+  // null until the card arrives; then every competitor starts selected
+  const [picked, setPicked] = useState<string[] | null>(null);
 
   useEffect(() => {
     Promise.all([
       fetch("/api/battlecard").then((r) => r.json()),
       fetch("/api/rates").then((r) => r.json()),
     ])
-      .then(([c, r]) => {
+      .then(([c, r]: [BattleCard, Snapshot[]]) => {
         setCard(c);
         setRates(r);
+        setPicked(c.competitors.map((x) => x.id));
       })
       .catch(() => setCard(null))
       .finally(() => setLoading(false));
   }, []);
 
   const matched = (id: string) => card?.rows.filter((r) => r.competitors[id]).length ?? 0;
+  const chosen = card?.competitors.filter((c) => picked?.includes(c.id)) ?? [];
+  const toggle = (id: string) =>
+    setPicked((prev) =>
+      prev?.includes(id) ? prev.filter((x) => x !== id) : [...(prev ?? []), id],
+    );
 
   return (
     <main>
@@ -203,10 +214,6 @@ export default function App() {
         <h1>
           <span className="mark">Yntraa Cloud</span> Battle Card
         </h1>
-        <p className="lede">
-          Every Yntraa virtual machine SKU, matched to the nearest equivalent from each
-          competitor. Where nobody sells the same shape, the row reads N/A.
-        </p>
       </header>
 
       {loading && <p className="status">Loading rate cards...</p>}
@@ -214,26 +221,36 @@ export default function App() {
 
       {card && (
         <>
-          <div className="stats">
-            <div className="stat">
-              <b>{card.rows.length}</b>
-              <span>Yntraa SKUs</span>
-            </div>
-            {card.competitors.map((c) => (
-              <div className="stat" key={c.id}>
-                <b>
-                  {matched(c.id)}
-                  <small>/{card.rows.length}</small>
-                </b>
-                <span>{c.name} matches</span>
-              </div>
-            ))}
+          <div className="picker">
+            <span className="picker-label">Compare against</span>
+            {card.competitors.map((c) => {
+              const on = picked?.includes(c.id) ?? false;
+              return (
+                <button
+                  key={c.id}
+                  className={`chip ${on ? "on" : ""}`}
+                  onClick={() => toggle(c.id)}
+                  aria-pressed={on}
+                >
+                  {c.name}
+                  <em>
+                    {matched(c.id)}/{card.rows.length}
+                  </em>
+                </button>
+              );
+            })}
           </div>
-          <BattleCardTable card={card} />
+          {chosen.length === 0 && (
+            <p className="status">Pick at least one competitor to compare against.</p>
+          )}
+          <BattleCardTable card={card} competitors={chosen} />
           <p className="foot">
             Monthly recurring charges, matched on vCPU count with RAM within 15%. Windows
-            SKUs are excluded so licence costs don't skew the comparison. E2E prices
-            converted at ₹{card.usdInr}/USD. Built {new Date(card.generatedAt).toLocaleString()}.
+            SKUs are excluded so licence costs don't skew the comparison. AWS, Azure and
+            Google Cloud are on-demand Linux in their Mumbai regions via{" "}
+            <a href="https://instances.vantage.sh/">Vantage</a>, and along with E2E are
+            converted at ₹{card.usdInr}/USD. Built{" "}
+            {new Date(card.generatedAt).toLocaleString()}.
           </p>
         </>
       )}

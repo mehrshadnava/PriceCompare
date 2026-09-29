@@ -1,4 +1,4 @@
-import { clean, loadPage, type Provider } from "./types.js";
+import { clean, loadPage, readTable, type Provider } from "./types.js";
 
 const URL = "https://www.ctrls.com/cloud-infrastructure-rate-card/";
 const HEADING = "Compute Pricing Section";
@@ -21,18 +21,7 @@ export const ctrls: Provider = {
     });
     if (!table) throw new Error(`CtrlS: "${HEADING}" table not found (layout changed?)`);
 
-    const grid: string[][] = (table as ReturnType<typeof $>)
-      .find("tr")
-      .map((_, tr) => [
-        $(tr)
-          .find("th, td")
-          .map((_, c) => clean($(c).text()))
-          .get(),
-      ])
-      .get();
-
-    const [columns, ...rows] = grid.filter((r) => r.length > 0);
-    if (!columns || rows.length === 0) throw new Error("CtrlS: compute table is empty");
+    const { columns, rows } = readTable($, table as ReturnType<typeof $>, "CtrlS");
 
     return {
       id: "ctrls",

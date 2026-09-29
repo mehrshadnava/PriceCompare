@@ -1,6 +1,6 @@
 # sudo cp pricecompare.service /etc/systemd/system/ && sudo systemctl enable --now pricecompare
 [Unit]
-Description=PriceCompare ESDS rates page
+Description=PriceCompare Yntraa battle card
 After=network-online.target
 
 [Service]
@@ -8,6 +8,10 @@ WorkingDirectory=/opt/PriceCompare
 ExecStart=/usr/bin/node dist/server/index.js
 Environment=NODE_ENV=production
 Environment=PORT=8000
+# Free key from instances-api.vantage.sh - without it AWS/Azure/GCP are simply absent
+Environment=VANTAGE_API_KEY=
+# USD to INR rate used for E2E and the Vantage feeds
+Environment=USD_INR=96
 Restart=always
 User=www-data
 

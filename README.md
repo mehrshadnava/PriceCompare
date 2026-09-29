@@ -1,13 +1,32 @@
 # PriceCompare
 
-Fetches ESDS **Compute Virtual CPU** and **Compute Virtual RAM** rates from
-https://www.esds.co.in/cloud-service-rates daily and shows them on a React page.
+A battle card putting every Yntraa Cloud VM SKU next to the nearest equivalent from
+each competitor, refreshed daily.
 
-- `server/` - Node + Express + TypeScript: scrapes with cheerio, refreshes on startup and daily at 06:00, caches to `data/rates.json`, serves `/api/rates` and the built React app.
+| Provider | Source |
+|---|---|
+| Yntraa Cloud (the anchor) | scraped from yntraacloud.ai |
+| CtrlS | scraped from ctrls.com |
+| E2E Networks | scraped from e2enetworks.com |
+| ESDS | scraped from esds.co.in - a per-vCPU/GB rate card, so every spec is priced exactly |
+| AWS, Microsoft Azure, Google Cloud | Vantage Instances API, on-demand Linux, Mumbai regions |
+
+- `server/` - Node + Express + TypeScript. Each provider refreshes independently on
+  startup and daily at 06:00, caches to `data/<id>.json`, and serves `/api/rates`
+  (raw tables) and `/api/battlecard` (matched comparison).
 - `client/` - React + Vite + TypeScript page.
+
+Matching is on vCPU count with RAM within 15%; the cheapest qualifying SKU wins, and
+Windows SKUs are excluded so licence costs don't skew the comparison.
+
+## Environment
+    VANTAGE_API_KEY   free key from instances-api.vantage.sh. Without it the three
+                      hyperscalers are skipped and the rest of the page is unaffected.
+    USD_INR           rate used for E2E and the Vantage feeds (default 96).
 
 ## Develop
     npm install
+    export VANTAGE_API_KEY=...
     npm run dev:server   # API on :8000
     npm run dev:client   # Vite on :5173 (proxies /api)
 
